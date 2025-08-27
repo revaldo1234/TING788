@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TING788</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: url('assets/casino.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1 {
+            color: #fff;
+            text-shadow: 0 4px 16px #000, 0 0 24px #ff0000;
+            margin-top: 40px;
+            font-size: 2.5em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .game-container {
+            background: rgba(0,0,0,0.85);
+            border-radius: 18px;
+            box-shadow: 0 4px 24px #ff0000;
+            display: inline-block;
+            padding: 32px 24px;
+            margin-top: 32px;
+            max-width: 400px;
+        }
+        #score, #money {
+            font-size: 1.3em;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 18px;
+            text-shadow: 0 2px 8px #000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        #target {
+            font-size: 2em;
+            color: #fff;
+            margin-bottom: 18px;
+            text-shadow: 0 2px 12px #000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            letter-spacing: 2px;
+        }
+        #clue, .petunjuk-bet, #result {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 1.1em;
+            color: #fff;
+            text-shadow: 0 2px 8px #000;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .petunjuk-bet {
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 1em;
+            background: rgba(255,0,0,0.12);
+            border-radius: 8px;
+            padding: 6px 0;
+        }
+        .game-input {
+            font-size:1.1em;
+            padding:10px 16px;
+            border-radius:12px;
+            border:2px solid #ff0000;
+            margin-bottom:12px;
+            margin-right: 10px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: 500;
+            background: rgba(255,255,255,0.85);
+            color: #000;
+            box-shadow: 0 2px 8px #000;
+        }
+        .game-btn {
+            background: linear-gradient(90deg, #000 0%, #ff0000 100%);
+            color: #fff;
+            border: none;
+            border-radius: 32px;
+            padding: 14px 38px;
+            font-size: 1.1em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-weight: bold;
+            box-shadow: 0 8px 32px #000, 0 2px 8px #ff0000;
+            cursor: pointer;
+            margin: 0 10px 10px 0;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+            outline: none;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 2px solid #ff0000;
+            position: relative;
+            overflow: hidden;
+        }
+        .game-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .game-btn:hover, .game-btn:focus {
+            background: linear-gradient(90deg, #ff0000 0%, #000 100%);
+            transform: scale(1.08);
+            box-shadow: 0 12px 36px #ff0000, 0 2px 12px #000;
+            border: 2px solid #000;
+        }
+        #result {
+            margin-top: 18px;
+            font-size: 1.2em;
+            color: #ff69b4;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>TING788!</h1>
+    <h1>GUESS THE NUMBER!!!!</h1>
+    <div class="game-container">
+        <div id="score">Score: 0</div>
+        <div id="money">Uang kamu: Rp <span id="money-value">1.000.000</span></div>
+        <div id="target">?</div>
+        <button class="game-btn" id="clue-btn" style="margin-bottom:12px;">Tampilkan Clue</button>
+        <div id="clue" style="display:none;"></div>
+        <div class="petunjuk-bet">
+            Masukkan bet (minimal 1, maksimal 100.000). Uang kamu akan berkurang sesuai bet setiap kali menebak!<br>
+            Jika tebakan benar, uang kamu bertambah 2x bet!
+        </div>
+        <input type="number" id="bet" class="game-input" placeholder="Bet (1-100000)" min="1" max="100000">
+        <input type="number" id="guess" class="game-input" placeholder="Tebak angka (1-10)" min="1" max="10">
+        <button class="game-btn" id="submit">Guess</button>
+        <button class="game-btn" id="restart">Restart</button>
+        <div style="margin:18px 0;">
+            <input type="number" id="withdraw-amount" class="game-input" placeholder="Withdraw (minimal 1)" min="1">
+            <button class="game-btn" id="withdraw-btn">Withdraw</button>
+        </div>
+        <div id="result"></div>
+    </div>
+    <script>
+        let score = 0;
+        let money = 1000000;
+        let target = Math.floor(Math.random() * 10) + 1;
+
+        function updateScore() {
+            document.getElementById('score').textContent = "Score: " + score;
+        }
+        function updateMoney() {
+            document.getElementById('money-value').textContent = money.toLocaleString();
+        }
+        function showTarget(show) {
+            document.getElementById('target').textContent = show ? target : "?";
+        }
+        function getRandomClue() {
+            let clues = [];
+            clues.push(target % 2 === 0 ? "Angka ini GENAP." : "Angka ini GANJIL.");
+            clues.push(target <= 5 ? "Lebih kecil atau sama dengan 5." : "Lebih besar dari 5.");
+            if (target === 1 || target === 10) clues.push("Angka ini di ujung rentang.");
+            if (target === 7) clues.push("Angka ini sering dianggap angka keberuntungan.");
+            if (target === 3 || target === 9) clues.push("Angka ini kelipatan 3.");
+            if (target === 2 || target === 4 || target === 6 || target === 8 || target === 10) clues.push("Angka ini kelipatan 2.");
+            if (target === 5) clues.push("Angka ini di tengah-tengah.");
+            if (target > 8) clues.push("Angka ini sangat besar.");
+            if (target < 3) clues.push("Angka ini sangat kecil.");
+            if ([4,6,8].includes(target)) clues.push("Angka ini lebih besar dari 3 dan kelipatan 2.");
+            if ([1,3,5,7,9].includes(target)) clues.push("Angka ini ganjil dan bukan kelipatan 2.");
+            return clues[Math.floor(Math.random() * clues.length)];
+        }
+
+        document.getElementById('clue-btn').onclick = function() {
+            document.getElementById('clue').style.display = "block";
+            document.getElementById('clue').textContent = getRandomClue();
+        };
+
+        document.getElementById('submit').onclick = function() {
+            const guess = parseInt(document.getElementById('guess').value);
+            const bet = parseInt(document.getElementById('bet').value);
+            if (isNaN(bet) || bet < 1 || bet > 100000) {
+                document.getElementById('result').textContent = "Masukkan bet antara 1-100.000!";
+                return;
+            }
+            if (bet > money) {
+                document.getElementById('result').textContent = "Uang kamu tidak cukup untuk bet sebesar itu!";
+                return;
+            }
+            if (isNaN(guess) || guess < 1 || guess > 10) {
+                document.getElementById('result').textContent = "Masukkan angka 1-10!";
+                return;
+            }
+            money -= bet;
+            updateMoney();
+            if (guess === target) {
+                score += bet;
+                money += bet * 2;
+                updateScore();
+                updateMoney();
+                document.getElementById('result').textContent = "Benar! 🎉 Kamu menang " + bet + " poin dan uang kamu bertambah Rp " + (bet * 2).toLocaleString() + "! Angka yang benar adalah: " + target;
+                showTarget(true);
+            } else {
+                score = Math.max(0, score - bet);
+                updateScore();
+                document.getElementById('result').textContent = (guess < target ? "Terlalu kecil!" : "Terlalu besar!") + " Kamu kehilangan " + bet + " poin dan uang kamu berkurang Rp " + bet.toLocaleString() + ". Angka yang benar adalah: " + target;
+                showTarget(true);
+            }
+            if (money <= 0) {
+                document.getElementById('result').textContent += " Uang kamu habis! Klik Restart untuk main lagi.";
+                document.getElementById('submit').disabled = true;
+            }
+        };
+
+        document.getElementById('restart').onclick = function() {
+            score = 0;
+            target = Math.floor(Math.random() * 10) + 1;
+            updateScore();
+            updateMoney();
+            showTarget(false);
+            document.getElementById('clue').style.display = "none";
+            document.getElementById('clue').textContent = "";
+            document.getElementById('result').textContent = "";
+            document.getElementById('guess').value = "";
+            document.getElementById('bet').value = "";
+            document.getElementById('submit').disabled = false;
+        };
+
+        document.getElementById('withdraw-btn').onclick = function() {
+            const withdraw = parseInt(document.getElementById('withdraw-amount').value);
+            if (isNaN(withdraw) || withdraw < 1) {
+                document.getElementById('result').textContent = "Masukkan jumlah withdraw minimal 1!";
+                return;
+            }
+            if (withdraw > money) {
+                document.getElementById('result').textContent = "Uang kamu tidak cukup untuk withdraw sebesar itu!";
+                return;
+            }
+            money -= withdraw;
+            updateMoney();
+            document.getElementById('result').textContent = "Withdraw berhasil! Kamu menarik Rp " + withdraw.toLocaleString() + ".";
+            document.getElementById('withdraw-amount').value = "";
+            if (money <= 0) {
+                document.getElementById('result').textContent += " Uang kamu habis! Klik Restart untuk main lagi.";
+                document.getElementById('submit').disabled = true;
+                document.getElementById('withdraw-btn').disabled = true;
+            }
+        };
+
+        updateScore();
+        updateMoney();
+        showTarget(false);
+    </script>
+</body>
+</html>
